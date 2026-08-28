@@ -223,15 +223,18 @@ export class JsonEventStore implements EventStore {
     return t
   }
 
-  /** 按时间桶聚合 token 消耗（曲线图数据） */
+  /** 按时间桶聚合 token 消耗（曲线图数据）。days 对 day 桶=天数，对 hour 桶=小时数 */
   tokenHistory(bucket: 'hour' | 'day', days: number): Array<{ ts: number; label: string; total: number; input: number; output: number; cacheRead: number }> {
     const now = Date.now()
-    const start = now - days * 24 * 3600 * 1000
-    const buckets = new Map<number, { total: number; input: number; output: number; cacheRead: number }>()
     const bucketSize = bucket === 'hour' ? 3600_000 : 24 * 3600_000
+    // 桶从"当前桶起点"倒推 N 个（含当前桶），保证今天/当前小时一定有桶
+    const nowBucket = Math.floor(now / bucketSize) * bucketSize
+    const count = bucket === 'hour' ? days * 24 : days
+    const startBucket = nowBucket - (count - 1) * bucketSize
+    const buckets = new Map<number, { total: number; input: number; output: number; cacheRead: number }>()
 
     for (const e of this.events) {
-      if (e.type !== 'usage' || e.ts < start) continue
+      if (e.type !== 'usage' || e.ts < startBucket) continue
       const b = Math.floor(e.ts / bucketSize) * bucketSize
       const cur = buckets.get(b) ?? { total: 0, input: 0, output: 0, cacheRead: 0 }
       cur.total += e.usage.input + e.usage.output + e.usage.cacheRead + e.usage.cacheWrite
@@ -242,9 +245,8 @@ export class JsonEventStore implements EventStore {
     }
 
     const out: Array<{ ts: number; label: string; total: number; input: number; output: number; cacheRead: number }> = []
-    const count = days * (bucket === 'hour' ? 24 : 1)
-    for (let i = count - 1; i >= 0; i--) {
-      const ts = Math.floor(start / bucketSize) * bucketSize + i * bucketSize
+    for (let i = 0; i < count; i++) {
+      const ts = startBucket + i * bucketSize
       const d = buckets.get(ts)
       out.push({
         ts,
