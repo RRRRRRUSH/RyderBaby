@@ -13,6 +13,7 @@ export interface PetApiShape {
   setPaused(paused: boolean): Promise<{ ok: boolean }>
   minimizeWindow(): Promise<{ ok: boolean }>
   closeWindow(): Promise<{ ok: boolean }>
+  setIgnoreMouse(ignore: boolean): Promise<{ ok: boolean }>
   quit(): Promise<{ ok: boolean }>
   onEvent(channel: string, cb: (payload: unknown) => void): () => void
 }

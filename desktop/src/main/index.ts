@@ -54,6 +54,14 @@ function createWindow(): void {
   // 置顶层级：Win 用 screen-saver，mac 用 floating（跨平台适配）
   mainWindow.setAlwaysOnTop(true, process.platform === 'darwin' ? 'floating' : 'screen-saver')
 
+  // 点击穿透：透明区域不拦截鼠标（桌面宠物不挡操作）
+  // 默认穿透；渲染层 hover 到可交互区域时通过 IPC 切换为可交互
+  mainWindow.setIgnoreMouseEvents(true, { forward: true })
+  ipcMain.handle('pet:set-ignore-mouse', (_e, ignore: boolean) => {
+    mainWindow?.setIgnoreMouseEvents(ignore, { forward: true })
+    return { ok: true }
+  })
+
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
@@ -286,7 +294,7 @@ function setupDataPlumbing(): void {
     }
     return total
   }
-  // 任务花费估算：按任务时间区间内的 usage 用量 × 价格
+  // 任务花费估算：按任务时间区间 + 会话过滤的 usage 用量 × 价格
   notifier.costFn = (ev: TaskEndEvent) => {
     if (!store || !settingsStore) return undefined
     const pricing = settingsStore.get().pricing
@@ -296,12 +304,15 @@ function setupDataPlumbing(): void {
     let output = 0
     let cacheRead = 0
     for (const e of store.query(from, to)) {
-      if (e.type === 'usage') {
+      // 只统计本任务所属会话的 usage（多 agent 并发不串账）
+      if (e.type === 'usage' && e.sessionId === ev.sessionId) {
         input += e.usage.input
         output += e.usage.output
         cacheRead += e.usage.cacheRead
       }
     }
+    // turn 事件的 tokens 已是本回合增量；若按窗口没取到（起始时间不准），
+    // 用 ev.tokens 作为兜底估算——但单数字无法拆分三价，故返回 undefined 让卡片只显 token
     if (input === 0 && output === 0 && cacheRead === 0) return undefined
     return calcCost({ input, output, cacheRead }, pricing)
   }
@@ -440,7 +451,45 @@ function isAgentPushEnabled(source: string): boolean {
   return agents.push[source] ?? true
 }
 
+// 应用身份：替换 Electron 默认名称（任务栏/通知/菜单归属）
+app.setName('RyderBaby')
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.ryderbaby.desktop')
+}
+
 app.whenReady().then(() => {
+  // 应用菜单：替换 Electron 默认菜单（去掉 "Electron" 字样）
+  const appMenu = Menu.buildFromTemplate([
+    ...(process.platform === 'darwin'
+      ? [{ label: app.name, submenu: [
+          { role: 'about' as const, label: `关于 ${app.name}` },
+          { type: 'separator' as const },
+          { role: 'quit' as const, label: '退出' }
+        ] }]
+      : []),
+    { label: '文件', submenu: [{ role: 'quit' as const, label: '退出' }] },
+    { label: '编辑', submenu: [
+        { role: 'undo' as const, label: '撤销' },
+        { role: 'redo' as const, label: '重做' },
+        { type: 'separator' as const },
+        { role: 'cut' as const, label: '剪切' },
+        { role: 'copy' as const, label: '复制' },
+        { role: 'paste' as const, label: '粘贴' }
+      ] },
+    { label: '视图', submenu: [
+        { role: 'reload' as const, label: '重新加载' },
+        { role: 'toggleDevTools' as const, label: '开发者工具' },
+        { type: 'separator' as const },
+        { role: 'resetZoom' as const, label: '实际大小' },
+        { role: 'zoomIn' as const, label: '放大' },
+        { role: 'zoomOut' as const, label: '缩小' },
+        { type: 'separator' as const },
+        { role: 'togglefullscreen' as const, label: '全屏' }
+      ] },
+    { label: '窗口', role: 'window' as const }
+  ])
+  Menu.setApplicationMenu(appMenu)
+
   setupIpc()
   createWindow()
   createTray()

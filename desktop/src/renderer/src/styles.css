@@ -318,28 +318,28 @@ body {
   flex: 1;
 }
 
-.hud-today {
+.hud-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 4px;
+  font-size: 12px;
+}
+
+.hud-token {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: #e8edf7;
 }
 
-.hud-today em {
+.hud-token em {
   font-style: normal;
   font-weight: 400;
   font-size: 9px;
   color: rgba(255, 255, 255, 0.55);
-  margin-left: 2px;
-}
-
-.hud-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 4px;
+  margin-left: 3px;
 }
 
 .hud-cost {
@@ -353,6 +353,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* 自定义图片图标 */

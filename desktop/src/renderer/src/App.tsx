@@ -119,6 +119,26 @@ function PetWindow(): React.JSX.Element {
   const fxTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [, setLangTick] = useState(0)
 
+  // 点击穿透切换：透明区域穿透鼠标，宠物本体/HUD 上可交互
+  useEffect(() => {
+    const onMove = (e: MouseEvent): void => {
+      const el = document.elementFromPoint(e.clientX, e.clientY)
+      // 可交互区域：宠物主体、HUD、气泡
+      const interactive = !!el?.closest('.pet-body, .pet-hud, .bubble')
+      void window.pet.setIgnoreMouse(!interactive)
+    }
+    window.addEventListener('mousemove', onMove)
+    // 离开窗口恢复穿透
+    const onLeave = (): void => {
+      void window.pet.setIgnoreMouse(true)
+    }
+    document.addEventListener('mouseleave', onLeave)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseleave', onLeave)
+    }
+  }, [])
+
   useEffect(() => {
     let disposed = false
     window.pet.getState().then((s: any) => {
@@ -129,7 +149,10 @@ function PetWindow(): React.JSX.Element {
         ...prev,
         connection: s.connection,
         mood: s.mood ?? prev.mood,
-        todayTokens: s.todayTokens ? s.todayTokens.input + s.todayTokens.output : 0,
+        // 今日 token 总量（含 cacheRead），与花费口径一致
+        todayTokens: s.todayTokens
+          ? s.todayTokens.input + s.todayTokens.output + s.todayTokens.cacheRead + s.todayTokens.cacheWrite
+          : 0,
         todayCost: s.todayCost ?? 0
       }))
     })
@@ -154,7 +177,12 @@ function PetWindow(): React.JSX.Element {
           return {
             ...prev,
             latestUsage: usage,
-            todayTokens: prev.todayTokens + usage.usage.input + usage.usage.output,
+            todayTokens:
+              prev.todayTokens +
+              usage.usage.input +
+              usage.usage.output +
+              usage.usage.cacheRead +
+              usage.usage.cacheWrite,
             todayCost: prev.todayCost + cost
           }
         })
@@ -254,14 +282,14 @@ function PetWindow(): React.JSX.Element {
           <span className={`hud-dot dot-${connection}`} />
           <span className="hud-conn">{connText}</span>
           <span className="hud-spacer" />
-          <span className="hud-today">
-            ⚡ {fmtTokens(todayTokens)} <em>{i18n.t('today')}</em>
-          </span>
-        </div>
-        <div className="hud-row">
-          <span className="hud-cost">💰 {fmtCost(todayCost)}</span>
-          <span className="hud-spacer" />
           {latestUsage && <span className="hud-model">{sourceTag ?? latestUsage.model}</span>}
+        </div>
+        <div className="hud-main">
+          <span className="hud-token">
+            ⚡ {fmtTokens(todayTokens)}
+            <em>{i18n.t('today')}</em>
+          </span>
+          <span className="hud-cost">💰 {fmtCost(todayCost)}</span>
         </div>
       </div>
     </div>
