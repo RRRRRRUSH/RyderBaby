@@ -11,6 +11,8 @@ export interface PetApiShape {
   >
   setMuted(muted: boolean): Promise<{ ok: boolean }>
   setPaused(paused: boolean): Promise<{ ok: boolean }>
+  minimizeWindow(): Promise<{ ok: boolean }>
+  closeWindow(): Promise<{ ok: boolean }>
   quit(): Promise<{ ok: boolean }>
   onEvent(channel: string, cb: (payload: unknown) => void): () => void
 }

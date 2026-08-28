@@ -49,8 +49,7 @@ const DEFAULT_EMOJIS: Record<PetMoodKey, string> = {
   happy: '😸',
   worried: '😿',
   panicked: '😱',
-  offline: '💤',
-  sleeping: '😴'
+  offline: '💤'
 }
 
 const MOOD_TEXT_KEYS: Record<PetMood, I18nKey> = {
@@ -59,8 +58,7 @@ const MOOD_TEXT_KEYS: Record<PetMood, I18nKey> = {
   happy: 'happyText',
   worried: 'worriedText',
   panicked: 'panickedText',
-  offline: 'offlineText',
-  sleeping: 'sleepingText'
+  offline: 'offlineText'
 }
 
 const PARTICLE_EMOJIS = ['🎉', '✨', '⭐', '🎊', '💫']
@@ -193,12 +191,17 @@ function PetWindow(): React.JSX.Element {
 
   const { mood, connection, todayTokens, latestUsage, bubble, strongFx } = state
   const icons = settings?.appearance.petIcons ?? {}
-  const idleText = settings?.appearance.idleText?.trim()
+  const moodTexts = settings?.appearance.moodTexts ?? {}
+  // 兼容旧字段：idleText 等价于 moodTexts.idle
+  const customIdle = settings?.appearance.idleText?.trim()
 
   // 图标：自定义优先，否则内置默认
   const iconNode = resolveIcon(icons[mood as PetMoodKey], DEFAULT_EMOJIS[mood as PetMoodKey])
-  // 文字：idle 用自定义（若有），其余用 i18n
-  const moodText = mood === 'idle' && idleText ? idleText : i18n.t(MOOD_TEXT_KEYS[mood])
+  // 文字：当前状态的自定义文字优先（旧 idleText 兜底），否则用 i18n 默认
+  const moodText =
+    (mood === 'idle' && customIdle) ||
+    moodTexts[mood as PetMoodKey]?.trim() ||
+    i18n.t(MOOD_TEXT_KEYS[mood])
 
   const connText =
     connection === 'connected'

@@ -12,6 +12,8 @@ const api: PetApiShape = {
     ipcRenderer.invoke('pet:get-token-history', opts),
   setMuted: (muted: boolean) => ipcRenderer.invoke('pet:set-muted', muted),
   setPaused: (paused: boolean) => ipcRenderer.invoke('pet:set-paused', paused),
+  minimizeWindow: () => ipcRenderer.invoke('pet:minimize-window'),
+  closeWindow: () => ipcRenderer.invoke('pet:close-window'),
   quit: () => ipcRenderer.invoke('pet:quit'),
   onEvent: (channel: string, cb: (payload: unknown) => void) => {
     const listener = (_e: Electron.IpcRendererEvent, payload: unknown) => cb(payload)

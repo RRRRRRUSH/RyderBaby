@@ -6,6 +6,8 @@ const dict = {
   zh: {
     // 设置界面
     settingsTitle: 'RyderBaby 设置',
+    tbMinimize: '最小化',
+    tbClose: '关闭',
     navGeneral: '常规',
     navReminders: '提醒',
     navPush: '推送渠道',
@@ -60,7 +62,9 @@ const dict = {
     secAppearance: '外观',
     customIcons: '自定义图标（每个状态可填 emoji 或图片路径）',
     idleText: '空闲状态文字（留空用默认）',
-    iconHint: '支持 emoji（如 😺）或本地图片路径（如 C:\\icons\\cat.png）。',
+    iconHint: '每个状态可自定义图标（emoji 或图片路径）与状态文字，留空用默认。',
+    moodIcon: '图标（emoji 或图片路径）',
+    moodText: '状态文字（留空用默认）',
     resetIcons: '恢复默认图标',
     // 外部工具
     secExternal: '外部工具监视',
@@ -91,6 +95,8 @@ const dict = {
   },
   en: {
     settingsTitle: 'RyderBaby Settings',
+    tbMinimize: 'Minimize',
+    tbClose: 'Close',
     navGeneral: 'General',
     navReminders: 'Reminders',
     navPush: 'Push Channels',
@@ -141,7 +147,9 @@ const dict = {
     secAppearance: 'Appearance',
     customIcons: 'Custom icons (emoji or image path per state)',
     idleText: 'Idle state text (empty = default)',
-    iconHint: 'Emoji (e.g. 😺) or local image path (e.g. C:\\icons\\cat.png).',
+    iconHint: 'Customize icon (emoji or image path) and status text per state; empty = default.',
+    moodIcon: 'Icon (emoji or image path)',
+    moodText: 'Status text (empty = default)',
     resetIcons: 'Reset icons',
     secExternal: 'External Tool Monitoring',
     extHint: 'Watch other AI coding tools\' local logs, unified into reminders & stats.',

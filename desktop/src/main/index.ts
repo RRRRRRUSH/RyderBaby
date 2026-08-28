@@ -78,6 +78,7 @@ function createSettingsWindow(): void {
     minWidth: 640,
     minHeight: 480,
     title: 'RyderBaby 设置',
+    frame: false,
     resizable: true,
     minimizable: true,
     webPreferences: {
@@ -164,6 +165,16 @@ function setupIpc(): void {
 
   ipcMain.handle('pet:set-paused', (_e, paused: boolean) => {
     notifier?.setPaused(paused)
+    return { ok: true }
+  })
+
+  ipcMain.handle('pet:minimize-window', (e) => {
+    BrowserWindow.fromWebContents(e.sender)?.minimize()
+    return { ok: true }
+  })
+
+  ipcMain.handle('pet:close-window', (e) => {
+    BrowserWindow.fromWebContents(e.sender)?.close()
     return { ok: true }
   })
 

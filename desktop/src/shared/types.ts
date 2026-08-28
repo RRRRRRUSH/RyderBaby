@@ -123,4 +123,3 @@ export type PetMood =
   | 'worried'
   | 'panicked'
   | 'offline'
-  | 'sleeping'

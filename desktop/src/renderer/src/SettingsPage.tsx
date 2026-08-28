@@ -20,7 +20,28 @@ const NAV_ITEMS: Array<{ id: PageId; labelKey: I18nKey }> = [
   { id: 'about', labelKey: 'navAbout' }
 ]
 
-const MOOD_KEYS = ['idle', 'working', 'happy', 'worried', 'panicked', 'offline', 'sleeping'] as const
+/** 真实生效的状态（与主进程 mood 逻辑一致）：去掉从未使用的 sleeping */
+const MOOD_KEYS = ['idle', 'working', 'happy', 'worried', 'panicked', 'offline'] as const
+
+/** 每个状态的含义说明（设置页标注用） */
+const MOOD_LABELS: Record<(typeof MOOD_KEYS)[number], { zh: string; en: string }> = {
+  idle: { zh: '空闲', en: 'Idle' },
+  working: { zh: '工作中', en: 'Working' },
+  happy: { zh: '任务完成', en: 'Task done' },
+  worried: { zh: '任务失败/重连', en: 'Failed / reconnecting' },
+  panicked: { zh: 'Token 预警', en: 'Token warning' },
+  offline: { zh: '离线', en: 'Offline' }
+}
+
+/** 各状态的默认文字 key（与 App.tsx 一致，placeholder 用） */
+const MOOD_TEXT_KEYS: Record<(typeof MOOD_KEYS)[number], I18nKey> = {
+  idle: 'idleDefault',
+  working: 'workingText',
+  happy: 'happyText',
+  worried: 'worriedText',
+  panicked: 'panickedText',
+  offline: 'offlineText'
+}
 
 const DEFAULT_EMOJIS: Record<(typeof MOOD_KEYS)[number], string> = {
   idle: '😺',
@@ -28,8 +49,7 @@ const DEFAULT_EMOJIS: Record<(typeof MOOD_KEYS)[number], string> = {
   happy: '😸',
   worried: '😿',
   panicked: '😱',
-  offline: '💤',
-  sleeping: '😴'
+  offline: '💤'
 }
 
 /**
@@ -172,7 +192,29 @@ export default function SettingsPage(): React.JSX.Element {
 
   return (
     <div className="settings-layout">
-      <aside className="settings-sidebar">
+      {/* 自定义标题栏（无边框窗口） */}
+      <div className="titlebar">
+        <span className="titlebar-title">RyderBaby</span>
+        <div className="titlebar-controls">
+          <button
+            className="tb-btn"
+            title={t('tbMinimize')}
+            onClick={() => void window.pet.minimizeWindow()}
+          >
+            ─
+          </button>
+          <button
+            className="tb-btn tb-close"
+            title={t('tbClose')}
+            onClick={() => void window.pet.closeWindow()}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-body">
+        <aside className="settings-sidebar">
         <div className="sidebar-brand">
           <span className="brand-logo">🐱</span>
           <span>RyderBaby</span>
@@ -406,43 +448,70 @@ export default function SettingsPage(): React.JSX.Element {
           <section className="page-section">
             <h2>{t('secAppearance')}</h2>
             <p className="hint">{t('iconHint')}</p>
-            <div className="icon-grid">
-              {MOOD_KEYS.map((mood) => (
-                <div key={mood} className="icon-cell">
-                  <span className="icon-preview">{appr.petIcons[mood]?.trim() || DEFAULT_EMOJIS[mood]}</span>
-                  <DebouncedTextInput
-                    value={appr.petIcons[mood] ?? ''}
-                    placeholder={DEFAULT_EMOJIS[mood]}
-                    onSave={(v) =>
-                      void update({
-                        appearance: {
-                          ...appr,
-                          petIcons: { ...appr.petIcons, [mood]: v.trim() || null }
-                        }
-                      })
-                    }
-                  />
-                </div>
-              ))}
+            <div className="mood-list">
+              {MOOD_KEYS.map((mood) => {
+                const label = MOOD_LABELS[mood]
+                const labelText = appr.language === 'en' ? label.en : label.zh
+                return (
+                  <div key={mood} className="mood-card">
+                    <div className="mood-head">
+                      <span className="mood-preview">{appr.petIcons[mood]?.trim() || DEFAULT_EMOJIS[mood]}</span>
+                      <div className="mood-title">
+                        <span className="mood-name">{labelText}</span>
+                        <span className="mood-state">state: {mood}</span>
+                      </div>
+                    </div>
+                    <div className="mood-fields">
+                      <label className="col">
+                        <span>{t('moodIcon')}</span>
+                        <DebouncedTextInput
+                          value={appr.petIcons[mood] ?? ''}
+                          placeholder={DEFAULT_EMOJIS[mood]}
+                          onSave={(v) =>
+                            void update({
+                              appearance: {
+                                ...appr,
+                                petIcons: { ...appr.petIcons, [mood]: v.trim() || null }
+                              }
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="col">
+                        <span>{t('moodText')}</span>
+                        <DebouncedTextInput
+                          value={appr.moodTexts[mood] ?? ''}
+                          placeholder={i18n.t(MOOD_TEXT_KEYS[mood])}
+                          onSave={(v) =>
+                            void update({
+                              appearance: {
+                                ...appr,
+                                moodTexts: { ...appr.moodTexts, [mood]: v.trim() }
+                              }
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
             <div className="icon-actions">
               <button
                 className="btn-secondary"
                 onClick={() =>
-                  void update({ appearance: { ...appr, petIcons: null as unknown as AppSettings['appearance']['petIcons'] } })
+                  void update({
+                    appearance: {
+                      ...appr,
+                      petIcons: null as unknown as AppSettings['appearance']['petIcons'],
+                      moodTexts: null as unknown as AppSettings['appearance']['moodTexts']
+                    }
+                  })
                 }
               >
                 {t('resetIcons')}
               </button>
-            </div>
-            <div className="field-card">
-              <label className="col">
-                <span>{t('idleText')}</span>
-                <DebouncedTextInput
-                  value={appr.idleText}
-                  onSave={(v) => void update({ appearance: { ...appr, idleText: v } })}
-                />
-              </label>
             </div>
           </section>
         )}
@@ -460,6 +529,7 @@ export default function SettingsPage(): React.JSX.Element {
           </section>
         )}
       </main>
+      </div>
     </div>
   )
 }

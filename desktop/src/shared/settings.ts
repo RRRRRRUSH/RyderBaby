@@ -31,7 +31,9 @@ export interface AppearanceSettings {
   language: 'zh' | 'en'
   /** 每个情绪状态的自定义图标（emoji 或图片路径）；空 = 用内置默认 */
   petIcons: Partial<Record<PetMoodKey, string>>
-  /** 空闲状态自定义文字（气泡/状态栏显示）；空 = 用内置默认 */
+  /** 各状态自定义文字（气泡/状态栏显示）；空 = 用内置默认 */
+  moodTexts: Partial<Record<PetMoodKey, string>>
+  /** 空闲状态自定义文字（兼容旧字段，等价于 moodTexts.idle） */
   idleText: string
 }
 
@@ -42,7 +44,6 @@ export type PetMoodKey =
   | 'worried'
   | 'panicked'
   | 'offline'
-  | 'sleeping'
 
 /** 每个 agent 的独立开关 */
 export interface AgentWatchSettings {
@@ -96,6 +97,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     lineStyle: 'ops',
     language: 'zh',
     petIcons: {},
+    moodTexts: {},
     idleText: ''
   },
   agents: {

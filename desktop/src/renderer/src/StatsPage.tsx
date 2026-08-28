@@ -116,7 +116,7 @@ export default function StatsPage(): React.JSX.Element {
   return (
     <div className="stats-page">
       <div className="stats-toolbar">
-        <div className="stats-toggles">
+        <div className="segmented">
           <button className={bucket === 'day' ? 'active' : ''} onClick={() => setBucket('day')}>
             {t('statsByDay')}
           </button>
@@ -124,7 +124,7 @@ export default function StatsPage(): React.JSX.Element {
             {t('statsByHour')}
           </button>
         </div>
-        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+        <select className="range-select" value={days} onChange={(e) => setDays(Number(e.target.value))}>
           <option value={7}>7 {t('statsDays')}</option>
           <option value={14}>14 {t('statsDays')}</option>
           <option value={30}>30 {t('statsDays')}</option>
@@ -139,13 +139,6 @@ export default function StatsPage(): React.JSX.Element {
         <div className="stat-card">
           <div className="stat-value">{aggregate?.totals.calls ?? 0}</div>
           <div className="stat-label">{t('statsCalls')}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value">
-            {aggregate?.taskCount ?? 0}
-            <span className="stat-sub"> / {aggregate?.failCount ?? 0} ❌</span>
-          </div>
-          <div className="stat-label">{t('statsTasks')}</div>
         </div>
       </div>
 
