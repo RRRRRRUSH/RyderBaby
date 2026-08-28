@@ -17,8 +17,12 @@ export class SettingsStore {
   }
 
   get(): AppSettings {
-    // 返回副本，防止调用方直接改内部状态
-    return JSON.parse(JSON.stringify(this.settings))
+    // 返回副本，防止调用方直接改内部状态；缺失的可选嵌套对象补默认空值
+    const out: AppSettings = JSON.parse(JSON.stringify(this.settings))
+    out.appearance.petIcons ??= {}
+    out.appearance.moodTexts ??= {}
+    out.appearance.idleText ??= ''
+    return out
   }
 
   /** 深合并部分更新并落盘 */

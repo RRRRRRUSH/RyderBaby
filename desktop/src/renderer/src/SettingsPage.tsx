@@ -492,10 +492,13 @@ export default function SettingsPage(): React.JSX.Element {
               {MOOD_KEYS.map((mood) => {
                 const label = MOOD_LABELS[mood]
                 const labelText = appr.language === 'en' ? label.en : label.zh
+                // 安全引用：petIcons/moodTexts 可能为 null/undefined（恢复默认后）
+                const icons = appr.petIcons ?? {}
+                const texts = appr.moodTexts ?? {}
                 return (
                   <div key={mood} className="mood-card">
                     <div className="mood-head">
-                      <span className="mood-preview">{appr.petIcons[mood]?.trim() || DEFAULT_EMOJIS[mood]}</span>
+                      <span className="mood-preview">{icons[mood]?.trim() || DEFAULT_EMOJIS[mood]}</span>
                       <div className="mood-title">
                         <span className="mood-name">{labelText}</span>
                         <span className="mood-state">state: {mood}</span>
@@ -505,13 +508,13 @@ export default function SettingsPage(): React.JSX.Element {
                       <label className="col">
                         <span>{t('moodIcon')}</span>
                         <DebouncedTextInput
-                          value={appr.petIcons[mood] ?? ''}
+                          value={icons[mood] ?? ''}
                           placeholder={DEFAULT_EMOJIS[mood]}
                           onSave={(v) =>
                             void update({
                               appearance: {
                                 ...appr,
-                                petIcons: { ...appr.petIcons, [mood]: v.trim() || null }
+                                petIcons: { ...icons, [mood]: v.trim() || null }
                               }
                             })
                           }
@@ -520,13 +523,13 @@ export default function SettingsPage(): React.JSX.Element {
                       <label className="col">
                         <span>{t('moodText')}</span>
                         <DebouncedTextInput
-                          value={appr.moodTexts[mood] ?? ''}
+                          value={texts[mood] ?? ''}
                           placeholder={i18n.t(MOOD_TEXT_KEYS[mood])}
                           onSave={(v) =>
                             void update({
                               appearance: {
                                 ...appr,
-                                moodTexts: { ...appr.moodTexts, [mood]: v.trim() }
+                                moodTexts: { ...texts, [mood]: v.trim() }
                               }
                             })
                           }
@@ -581,7 +584,17 @@ function mergeSettings(prev: AppSettings, patch: Partial<AppSettings>): AppSetti
     ...patch,
     reminders: patch.reminders ? { ...prev.reminders, ...patch.reminders } : prev.reminders,
     push: patch.push ? { ...prev.push, dingtalk: patch.push.dingtalk ? { ...prev.push.dingtalk, ...patch.push.dingtalk } : prev.push.dingtalk } : prev.push,
-    appearance: patch.appearance ? { ...prev.appearance, ...patch.appearance, petIcons: patch.appearance.petIcons ?? prev.appearance.petIcons } : prev.appearance,
+    appearance: patch.appearance
+      ? {
+          ...prev.appearance,
+          ...patch.appearance,
+          // null = 删除（恢复默认），保持旧值兜底
+          petIcons: patch.appearance.petIcons ?? prev.appearance.petIcons,
+          moodTexts: patch.appearance.moodTexts ?? prev.appearance.moodTexts,
+          idleText: patch.appearance.idleText ?? prev.appearance.idleText
+        }
+      : prev.appearance,
+    pricing: patch.pricing ? { ...prev.pricing, ...patch.pricing } : prev.pricing,
     agents: patch.agents
       ? { watch: { ...prev.agents.watch, ...patch.agents.watch }, push: { ...prev.agents.push, ...patch.agents.push } }
       : prev.agents

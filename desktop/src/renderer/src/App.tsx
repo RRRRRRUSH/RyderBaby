@@ -201,10 +201,10 @@ function PetWindow(): React.JSX.Element {
   }
 
   const { mood, connection, todayTokens, todayCost, latestUsage, bubble, strongFx } = state
-  const icons = settings?.appearance.petIcons ?? {}
-  const moodTexts = settings?.appearance.moodTexts ?? {}
+  const icons = settings?.appearance?.petIcons ?? {}
+  const moodTexts = settings?.appearance?.moodTexts ?? {}
   // 兼容旧字段：idleText 等价于 moodTexts.idle
-  const customIdle = settings?.appearance.idleText?.trim()
+  const customIdle = settings?.appearance?.idleText?.trim()
 
   // 图标：自定义优先，否则内置默认
   const iconNode = resolveIcon(icons[mood as PetMoodKey], DEFAULT_EMOJIS[mood as PetMoodKey])
