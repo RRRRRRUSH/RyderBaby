@@ -1,4 +1,5 @@
 import type { PetEvent, TaskEndEvent, UsageEvent } from '../shared/types'
+import { fmtCost } from './cost'
 
 /** Agent 来源显示名 */
 export const SOURCE_LABELS: Record<string, string> = {
@@ -55,8 +56,9 @@ export interface TaskCardData {
 /**
  * 把一次任务结束事件整理成结构化 markdown 卡片（钉钉/飞书通用）。
  * 从会话累计中带出 token 与轮次信息，避免只推一行原始 label。
+ * @param cost 可选：本次任务的估算花费（元）
  */
-export function buildTaskCard(ev: TaskEndEvent, sessionTokens?: number): { title: string; body: string } {
+export function buildTaskCard(ev: TaskEndEvent, sessionTokens?: number, cost?: number): { title: string; body: string } {
   const src = sourceLabel(ev.source)
   const ok = isSuccess(ev.result)
   const kindLabel: Record<string, string> = {
@@ -91,7 +93,7 @@ export function buildTaskCard(ev: TaskEndEvent, sessionTokens?: number): { title
   }
   const tokens = ev.tokens ?? sessionTokens
   if (tokens !== undefined && tokens > 0) {
-    rows.push(`- ⚡ Token：${fmtTokens(tokens)}`)
+    rows.push(`- ⚡ Token：${fmtTokens(tokens)}${cost !== undefined && cost > 0 ? ` · ≈${fmtCost(cost)}` : ''}`)
   }
   if (ev.agentsStarted !== undefined && ev.agentsStarted > 0) {
     rows.push(`- 🧩 轮次：${ev.agentsStarted} 次 agent 调用`)

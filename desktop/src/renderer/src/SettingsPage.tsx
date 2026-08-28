@@ -262,6 +262,46 @@ export default function SettingsPage(): React.JSX.Element {
               </label>
               <p className="hint">{t('dshUrlHint')}</p>
             </div>
+            <div className="field-card">
+              <h3 className="card-title">{t('secPricing')}</h3>
+              <p className="hint">{t('pricingHint')}</p>
+              <label className="row">
+                <span>{t('priceCacheHit')}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={settings.pricing.cacheHit}
+                  onChange={(e) =>
+                    void update({ pricing: { ...settings.pricing, cacheHit: Number(e.target.value) || 0 } })
+                  }
+                />
+              </label>
+              <label className="row">
+                <span>{t('priceInput')}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={settings.pricing.input}
+                  onChange={(e) =>
+                    void update({ pricing: { ...settings.pricing, input: Number(e.target.value) || 0 } })
+                  }
+                />
+              </label>
+              <label className="row">
+                <span>{t('priceOutput')}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={settings.pricing.output}
+                  onChange={(e) =>
+                    void update({ pricing: { ...settings.pricing, output: Number(e.target.value) || 0 } })
+                  }
+                />
+              </label>
+            </div>
           </section>
         )}
 

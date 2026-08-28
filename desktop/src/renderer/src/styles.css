@@ -332,10 +332,9 @@ body {
   margin-left: 2px;
 }
 
-.hud-bottom {
+.hud-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
@@ -343,16 +342,17 @@ body {
   padding-top: 4px;
 }
 
+.hud-cost {
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
 .hud-model {
   max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.hud-cache {
-  font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.45);
 }
 
 /* 自定义图片图标 */

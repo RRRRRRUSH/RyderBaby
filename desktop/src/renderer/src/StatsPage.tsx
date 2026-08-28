@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as echarts from 'echarts'
 import { i18n, type I18nKey } from './i18n'
 import { fmtTokens } from './fmt'
+import { calcCost, fmtCost } from './cost'
+import type { AppSettings } from '../../shared/settings'
 import './stats.css'
 
 type HistoryPoint = { ts: number; label: string; total: number; input: number; output: number; cacheRead: number }
@@ -15,12 +17,16 @@ export default function StatsPage(): React.JSX.Element {
     taskCount: number
     failCount: number
   } | null>(null)
+  const [settings, setSettings] = useState<AppSettings | null>(null)
   const chartRef = useRef<HTMLDivElement | null>(null)
   const chartInst = useRef<echarts.ECharts | null>(null)
 
   useEffect(() => {
     void window.pet.getTokenHistory({ bucket, days }).then((d) => setData(d as HistoryPoint[]))
-    void window.pet.getState().then((s: any) => setAggregate(s.aggregate ?? null))
+    void window.pet.getState().then((s: any) => {
+      setAggregate(s.aggregate ?? null)
+      setSettings(s.settings as AppSettings)
+    })
   }, [bucket, days])
 
   useEffect(() => {
@@ -125,6 +131,7 @@ export default function StatsPage(): React.JSX.Element {
           </button>
         </div>
         <select className="range-select" value={days} onChange={(e) => setDays(Number(e.target.value))}>
+          <option value={1}>1 {t('statsDays')}</option>
           <option value={7}>7 {t('statsDays')}</option>
           <option value={14}>14 {t('statsDays')}</option>
           <option value={30}>30 {t('statsDays')}</option>
@@ -139,6 +146,17 @@ export default function StatsPage(): React.JSX.Element {
         <div className="stat-card">
           <div className="stat-value">{aggregate?.totals.calls ?? 0}</div>
           <div className="stat-label">{t('statsCalls')}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value stat-cost">
+            {fmtCost(
+              calcCost(
+                aggregate?.totals ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0, calls: 0 },
+                settings?.pricing
+              )
+            )}
+          </div>
+          <div className="stat-label">{t('statsCost')}</div>
         </div>
       </div>
 

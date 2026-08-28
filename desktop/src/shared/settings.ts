@@ -22,6 +22,10 @@ export interface ReminderSettings {
   dailyTokenBudget: number
   /** 预警档位 0-1 */
   warningLevels: number[]
+  /** 命令级（job）完成是否提醒（默认 false：npm 等不打扰） */
+  notifyCommandSuccess: boolean
+  /** 命令级（job）失败是否提醒（默认 true） */
+  notifyCommandFailure: boolean
 }
 
 export interface AppearanceSettings {
@@ -53,19 +57,14 @@ export interface AgentWatchSettings {
   push: Record<string, boolean>
 }
 
-export interface ReminderSettings {
-  /** 任务结束后强提醒：声音 + 加强动画 */
-  strongOnTaskEnd: boolean
-  /** 失败/错误强提醒（默认开） */
-  strongOnFailure: boolean
-  /** 每日 token 预算（0 = 不限制） */
-  dailyTokenBudget: number
-  /** 预警档位 0-1 */
-  warningLevels: number[]
-  /** 命令级（job）完成是否提醒（默认 false：npm 等不打扰） */
-  notifyCommandSuccess: boolean
-  /** 命令级（job）失败是否提醒（默认 true） */
-  notifyCommandFailure: boolean
+/** 价格设置：每 1M tokens 的价格（元），按实际计价规则 */
+export interface PricingSettings {
+  /** 输入（缓存命中）¥/M */
+  cacheHit: number
+  /** 输入（未命中）¥/M */
+  input: number
+  /** 输出 ¥/M */
+  output: number
 }
 
 export interface AppSettings {
@@ -73,6 +72,7 @@ export interface AppSettings {
   push: PushChannelSettings
   appearance: AppearanceSettings
   agents: AgentWatchSettings
+  pricing: PricingSettings
   /** DSH 地址 */
   dshUrl: string
 }
@@ -103,6 +103,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   agents: {
     watch: { dsh: true, 'claude-code': false, codex: false },
     push: { dsh: true, 'claude-code': false, codex: false }
+  },
+  // DeepSeek 参考价（¥/M tokens），可改
+  pricing: {
+    cacheHit: 0.2,
+    input: 2.0,
+    output: 8.0
   },
   dshUrl: 'http://127.0.0.1:63726'
 }

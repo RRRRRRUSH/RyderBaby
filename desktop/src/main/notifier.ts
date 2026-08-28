@@ -47,6 +47,8 @@ export class Notifier extends EventEmitter {
   private dailyWindow = ''
   /** 事件回调：外部注入查询会话 token 的函数（避免 Notifier 依赖 store） */
   sessionTokenFn: ((sessionId: string) => number) | null = null
+  /** 事件回调：外部注入计算本次任务花费的函数（按价格与用量） */
+  costFn: ((ev: TaskEndEvent) => number | undefined) | null = null
 
   constructor(options: NotifierOptions = {}) {
     super()
@@ -138,11 +140,12 @@ export class Notifier extends EventEmitter {
       return
     }
 
-    // 卡片化：外部注入的 token 查询补充会话消耗
+    // 卡片化：外部注入的 token 查询补充会话消耗；costFn 计算本次花费
     const sessionTokens = ev.source && ev.source !== 'dsh' && this.sessionTokenFn
       ? this.sessionTokenFn(ev.sessionId ?? '')
       : undefined
-    const card = buildTaskCard(ev, sessionTokens)
+    const cost = this.costFn ? this.costFn(ev) : undefined
+    const card = buildTaskCard(ev, sessionTokens, cost)
 
     this.emitReminder({
       level: ok ? 'L1' : 'L2',

@@ -8,6 +8,7 @@ import { DingTalkChannel, PushRouter } from './push'
 import { ExternalWatcher } from './external-watcher'
 import { AgentDiscovery } from './agent-discovery'
 import { TaskTracker } from './task-tracker'
+import { calcCost, costOfTotals, fmtCost } from './cost'
 import type { ConnectionState, PetEvent, TaskEndEvent } from '../shared/types'
 import type { AppSettings } from '../shared/settings'
 
@@ -126,14 +127,18 @@ function showPet(): void {
 }
 
 function setupIpc(): void {
-  ipcMain.handle('pet:get-state', () => ({
-    connection: connectionState,
-    mood: petMood,
-    lastReminder,
-    aggregate: store?.aggregate() ?? null,
-    todayTokens: store?.todayTokens() ?? null,
-    settings: settingsStore?.get() ?? null
-  }))
+  ipcMain.handle('pet:get-state', () => {
+    const today = store?.todayTokens() ?? null
+    return {
+      connection: connectionState,
+      mood: petMood,
+      lastReminder,
+      aggregate: store?.aggregate() ?? null,
+      todayTokens: today,
+      todayCost: today && settingsStore ? costOfTotals(today, settingsStore.get().pricing) : 0,
+      settings: settingsStore?.get() ?? null
+    }
+  })
 
   ipcMain.handle('pet:get-settings', () => settingsStore?.get() ?? null)
 
@@ -280,6 +285,25 @@ function setupDataPlumbing(): void {
       }
     }
     return total
+  }
+  // 任务花费估算：按任务时间区间内的 usage 用量 × 价格
+  notifier.costFn = (ev: TaskEndEvent) => {
+    if (!store || !settingsStore) return undefined
+    const pricing = settingsStore.get().pricing
+    const from = ev.startedAt ?? 0
+    const to = ev.endedAt ?? Date.now()
+    let input = 0
+    let output = 0
+    let cacheRead = 0
+    for (const e of store.query(from, to)) {
+      if (e.type === 'usage') {
+        input += e.usage.input
+        output += e.usage.output
+        cacheRead += e.usage.cacheRead
+      }
+    }
+    if (input === 0 && output === 0 && cacheRead === 0) return undefined
+    return calcCost({ input, output, cacheRead }, pricing)
   }
 
   // 推送渠道：目前只有钉钉，后续飞书/企微/公众号在此追加

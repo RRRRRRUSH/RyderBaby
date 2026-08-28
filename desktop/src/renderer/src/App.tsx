@@ -5,6 +5,7 @@ import SettingsPage from './SettingsPage'
 import { i18n, type I18nKey } from './i18n'
 import { playFailureSound, playSuccessSound } from './sounds'
 import { fmtTokens } from './fmt'
+import { calcCost, fmtCost } from './cost'
 
 type UsagePayload = {
   ts: number
@@ -37,6 +38,7 @@ interface PetState {
   mood: PetMood
   connection: ConnectionPayload
   todayTokens: number
+  todayCost: number
   latestUsage: UsagePayload | null
   latestTask: TaskEndPayload | null
   bubble: string | null
@@ -105,12 +107,14 @@ function PetWindow(): React.JSX.Element {
     mood: 'idle',
     connection: 'offline',
     todayTokens: 0,
+    todayCost: 0,
     latestUsage: null,
     latestTask: null,
     bubble: null,
     strongFx: null
   })
   const [settings, setSettings] = useState<AppSettings | null>(null)
+  const settingsRef = useRef<AppSettings | null>(null)
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fxTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [, setLangTick] = useState(0)
@@ -120,11 +124,13 @@ function PetWindow(): React.JSX.Element {
     window.pet.getState().then((s: any) => {
       if (disposed) return
       setSettings(s.settings as AppSettings)
+      settingsRef.current = s.settings as AppSettings
       setState((prev) => ({
         ...prev,
         connection: s.connection,
         mood: s.mood ?? prev.mood,
-        todayTokens: s.todayTokens ? s.todayTokens.input + s.todayTokens.output : 0
+        todayTokens: s.todayTokens ? s.todayTokens.input + s.todayTokens.output : 0,
+        todayCost: s.todayCost ?? 0
       }))
     })
 
@@ -142,11 +148,16 @@ function PetWindow(): React.JSX.Element {
       window.pet.onEvent('pet:usage', (u) => {
         if (disposed) return
         const usage = u as UsagePayload
-        setState((prev) => ({
-          ...prev,
-          latestUsage: usage,
-          todayTokens: prev.todayTokens + usage.usage.input + usage.usage.output
-        }))
+        setState((prev) => {
+          const pricing = settingsRef.current?.pricing
+          const cost = calcCost(usage.usage, pricing)
+          return {
+            ...prev,
+            latestUsage: usage,
+            todayTokens: prev.todayTokens + usage.usage.input + usage.usage.output,
+            todayCost: prev.todayCost + cost
+          }
+        })
       }),
       window.pet.onEvent('pet:task-end', (t) => {
         if (disposed) return
@@ -189,7 +200,7 @@ function PetWindow(): React.JSX.Element {
     }, 5000)
   }
 
-  const { mood, connection, todayTokens, latestUsage, bubble, strongFx } = state
+  const { mood, connection, todayTokens, todayCost, latestUsage, bubble, strongFx } = state
   const icons = settings?.appearance.petIcons ?? {}
   const moodTexts = settings?.appearance.moodTexts ?? {}
   // 兼容旧字段：idleText 等价于 moodTexts.idle
@@ -247,14 +258,11 @@ function PetWindow(): React.JSX.Element {
             ⚡ {fmtTokens(todayTokens)} <em>{i18n.t('today')}</em>
           </span>
         </div>
-        {latestUsage && (
-          <div className="hud-bottom">
-            <span className="hud-model">{sourceTag ?? latestUsage.model}</span>
-            <span className="hud-cache">
-              {latestUsage.usage.cacheRead > 0 ? `cache ${fmtTokens(latestUsage.usage.cacheRead)}` : ''}
-            </span>
-          </div>
-        )}
+        <div className="hud-row">
+          <span className="hud-cost">💰 {fmtCost(todayCost)}</span>
+          <span className="hud-spacer" />
+          {latestUsage && <span className="hud-model">{sourceTag ?? latestUsage.model}</span>}
+        </div>
       </div>
     </div>
   )
