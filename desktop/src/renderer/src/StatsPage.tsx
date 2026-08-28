@@ -99,6 +99,15 @@ export default function StatsPage(): React.JSX.Element {
     }
   }, [data])
 
+  // 窗口尺寸变化时重绘图表（设置窗口可拉伸）
+  useEffect(() => {
+    const onResize = (): void => {
+      chartInst.current?.resize()
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const t = (key: I18nKey): string => i18n.t(key)
   const total = aggregate
     ? aggregate.totals.input + aggregate.totals.output + aggregate.totals.cacheRead + aggregate.totals.cacheWrite

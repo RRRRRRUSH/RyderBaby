@@ -97,9 +97,17 @@ body {
 .settings-content {
   flex: 1;
   padding: 28px 32px 40px;
-  max-width: 880px;
   min-width: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 统计页等希望撑满高度的页面 */
+.settings-content > .page-section,
+.settings-content > .stats-page {
+  flex: 1;
+  min-height: 0;
 }
 
 .page-section h2 {
