@@ -49,6 +49,7 @@ export interface TaskCardData {
   turns?: number
   tokens?: number
   sessionId?: string
+  sessionTitle?: string
 }
 
 /**
@@ -71,11 +72,17 @@ export function buildTaskCard(ev: TaskEndEvent, sessionTokens?: number): { title
   const taskName =
     ev.meta?.name || ev.label || ev.runId || ev.jobId || (ev.kind === 'turn' ? `第 ${ev.turn ?? '?'} 轮对话` : '(未命名任务)')
 
-  const title = `${ok ? '✅' : '❌'} ${src} · ${kindZh}${ok ? '完成' : '失败'}`
+  // 会话标题（对话名称）：多 agent 并发时区分是哪个对话的任务
+  const sessionTitle = ev.sessionTitle?.trim()
+
+  const title = `${ok ? '✅' : '❌'} ${src} · ${kindZh}${ok ? '完成' : '失败'}${sessionTitle ? ` ·「${sessionTitle}」` : ''}`
 
   // 卡片主体：钉钉 markdown 用「- 前缀」让每行独立渲染
   const rows: string[] = []
   rows.push(`**${taskName}**`)
+  if (sessionTitle) {
+    rows.push(`- 💬 对话：${sessionTitle}`)
+  }
   if (ev.kind === 'turn' && typeof ev.turn === 'number') {
     rows.push(`- 🔄 回合：第 ${ev.turn} 轮`)
   }

@@ -68,6 +68,8 @@ export interface TaskEndEvent {
   turn?: number
   /** 该回合/任务的 token 累计 */
   tokens?: number
+  /** 会话标题（对话名称，如"电脑桌宠监控与题型构思"） */
+  sessionTitle?: string
   /** 事件来源：dsh / claude-code / codex / … */
   source?: string
 }
