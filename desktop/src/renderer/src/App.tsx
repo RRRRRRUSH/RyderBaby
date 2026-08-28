@@ -134,23 +134,60 @@ function PetWindow(): React.JSX.Element {
     }
   }, [hovered])
 
-  // 点击穿透切换：鼠标在窗口内任意位置即可交互（拖动把手在 pet-shell 上）
-  // 穿透状态下 forward 仍会转发 mousemove 用于判断
+  // 点击穿透 + 自定义拖动
+  // 注意：穿透状态（forward）下只有 mousemove 到达渲染层，
+  // 所以先靠 hover 取消穿透，之后 mousedown 才到达，拖动才可开始
   useEffect(() => {
     let dragging = false
+    let startX = 0
+    let startY = 0
+    let winX = 0
+    let winY = 0
+    let winReady = false
+    let lastMove = 0
+
     const onMove = (e: MouseEvent): void => {
-      // 拖动期间保持可交互（不打断拖拽）
-      if (dragging) return
-      const interactive = e.target instanceof Element && !!e.target.closest('.pet-shell')
+      // 拖动：计算位移移动窗口
+      if (dragging) {
+        const now = Date.now()
+        if (now - lastMove > 16) {
+          lastMove = now
+          if (winReady) {
+            void window.pet.moveWindow(winX + (e.screenX - startX), winY + (e.screenY - startY))
+          } else {
+            // 窗口位置未知（mousedown 时未就绪）：本次只记录，下次开始移动
+            winReady = true
+          }
+        }
+        return
+      }
+      // 穿透判断：只在宠物/HUD/气泡这些实际内容上取消穿透（透明区域保持穿透）
+      const interactive =
+        e.target instanceof Element && !!e.target.closest('.pet-body, .pet-hud, .bubble, .hover-card')
       void window.pet.setIgnoreMouse(!interactive)
     }
-    const onDown = (): void => {
-      dragging = true
+    const onDown = (e: MouseEvent): void => {
+      // 只有左键 + 在宠物区域开始拖动
+      if (e.button !== 0) return
+      if (!(e.target instanceof Element) || !e.target.closest('.pet-body, .pet-hud, .bubble, .hover-card')) return
+      // 取消穿透，确保后续 mousemove 正常到达
       void window.pet.setIgnoreMouse(false)
+      dragging = true
+      winReady = false
+      startX = e.screenX
+      startY = e.screenY
+      // 异步补窗口位置（本地 IPC 很快，几乎不影响首帧拖动）
+      void window.pet.getWindowPosition().then((pos) => {
+        if (pos && dragging) {
+          winX = pos.x
+          winY = pos.y
+          winReady = true
+        }
+      })
+      e.preventDefault()
     }
     const onUp = (): void => {
       dragging = false
-      // 鼠标可能已离开窗口，交给后续 mousemove 判断
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mousedown', onDown)

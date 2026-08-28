@@ -83,6 +83,7 @@ export class SseClient extends EventEmitter {
     let controller: AbortController | null = null
     const run = async (): Promise<void> => {
       try {
+        console.log(`[pet] SSE connecting to ${this.options.url}`)
         controller = new AbortController()
         const timeout = setTimeout(() => controller?.abort(), 30000)
         const res = await fetch(this.options.url, {

@@ -71,6 +71,17 @@ function createWindow(): void {
     return { ok: true }
   })
 
+  ipcMain.handle('pet:get-window-position', () => {
+    if (!mainWindow) return null
+    const [x, y] = mainWindow.getPosition()
+    return { x, y }
+  })
+
+  ipcMain.handle('pet:move-window', (_e, x: number, y: number) => {
+    mainWindow?.setPosition(Math.round(x), Math.round(y))
+    return { ok: true }
+  })
+
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
@@ -523,6 +534,9 @@ app.setName('RyderBaby')
 if (process.platform === 'win32') {
   app.setAppUserModelId('com.ryderbaby.desktop')
 }
+// 固定 userData 路径：setName 会改变默认 userData 目录名（RyderBaby），
+// 显式指回稳定的目录，避免新旧目录数据分裂
+app.setPath('userData', join(app.getPath('appData'), 'ryderbaby-desktop'))
 
 app.whenReady().then(() => {
   // 应用菜单：替换 Electron 默认菜单（去掉 "Electron" 字样）

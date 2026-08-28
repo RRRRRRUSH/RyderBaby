@@ -17,6 +17,8 @@ export interface PetApiShape {
   minimizeWindow(): Promise<{ ok: boolean }>
   closeWindow(): Promise<{ ok: boolean }>
   setIgnoreMouse(ignore: boolean): Promise<{ ok: boolean }>
+  getWindowPosition(): Promise<{ x: number; y: number } | null>
+  moveWindow(x: number, y: number): Promise<{ ok: boolean }>
   quit(): Promise<{ ok: boolean }>
   onEvent(channel: string, cb: (payload: unknown) => void): () => void
 }

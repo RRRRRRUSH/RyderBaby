@@ -16,6 +16,8 @@ const api: PetApiShape = {
   minimizeWindow: () => ipcRenderer.invoke('pet:minimize-window'),
   closeWindow: () => ipcRenderer.invoke('pet:close-window'),
   setIgnoreMouse: (ignore: boolean) => ipcRenderer.invoke('pet:set-ignore-mouse', ignore),
+  getWindowPosition: () => ipcRenderer.invoke('pet:get-window-position'),
+  moveWindow: (x: number, y: number) => ipcRenderer.invoke('pet:move-window', x, y),
   quit: () => ipcRenderer.invoke('pet:quit'),
   onEvent: (channel: string, cb: (payload: unknown) => void) => {
     const listener = (_e: Electron.IpcRendererEvent, payload: unknown) => cb(payload)
