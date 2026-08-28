@@ -68,6 +68,8 @@ export interface TaskEndEvent {
   turn?: number
   /** 该回合/任务的 token 累计 */
   tokens?: number
+  /** 该回合的 usage 明细（本回合增量，按三档价格拆分花费用） */
+  usage?: { input: number; output: number; cacheRead: number; cacheWrite: number }
   /** 会话标题（对话名称，如"电脑桌宠监控与题型构思"） */
   sessionTitle?: string
   /** 事件来源：dsh / claude-code / codex / … */

@@ -393,10 +393,17 @@ function setupDataPlumbing(): void {
     }
     return total
   }
-  // 任务花费估算：按任务时间区间 + 会话过滤的 usage 用量 × 价格
+  // 任务花费估算：优先用事件自带的本回合 usage 明细（精确），
+  // 外部工具（无 usage 字段）退回时间窗口兜底
   notifier.costFn = (ev: TaskEndEvent) => {
-    if (!store || !settingsStore) return undefined
+    if (!settingsStore) return undefined
     const pricing = settingsStore.get().pricing
+    // 精确路径：插件 v19 提供本回合 input/output/cacheRead 增量
+    if (ev.usage && (ev.usage.input > 0 || ev.usage.output > 0 || ev.usage.cacheRead > 0)) {
+      return calcCost({ input: ev.usage.input, output: ev.usage.output, cacheRead: ev.usage.cacheRead }, pricing)
+    }
+    // 兜底路径：时间窗口 + 会话过滤（外部工具事件）
+    if (!store) return undefined
     const from = ev.startedAt ?? 0
     const to = ev.endedAt ?? Date.now()
     let input = 0
@@ -410,8 +417,6 @@ function setupDataPlumbing(): void {
         cacheRead += e.usage.cacheRead
       }
     }
-    // turn 事件的 tokens 已是本回合增量；若按窗口没取到（起始时间不准），
-    // 用 ev.tokens 作为兜底估算——但单数字无法拆分三价，故返回 undefined 让卡片只显 token
     if (input === 0 && output === 0 && cacheRead === 0) return undefined
     return calcCost({ input, output, cacheRead }, pricing)
   }
