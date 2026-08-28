@@ -24,6 +24,8 @@ let pushRouter: PushRouter | null = null
 let externalWatcher: ExternalWatcher | null = null
 let agentDiscovery: AgentDiscovery | null = null
 let taskTracker: TaskTracker | null = null
+/** 回合级去重：同一会话同一回合号只推送一次（插件更新/重连可能重复发） */
+const seenTurns = new Set<string>()
 let connectionState: ConnectionState = 'offline'
 let petMood: string = 'idle'
 let lastReminder: Reminder | null = null
@@ -212,11 +214,22 @@ function applyExternalWatcher(watch: Record<string, boolean>): void {
       if (tagged.type === 'task-end' && taskTracker) {
         tagged = taskTracker.enrich(tagged)
       }
+      // 回合级去重（与 SSE 路径共用 seenTurns）
+      let turnDeduped = false
+      if (tagged.type === 'task-end' && tagged.kind === 'turn' && typeof tagged.turn === 'number' && tagged.sessionId) {
+        const key = `${tagged.sessionId}|${tagged.turn}`
+        if (seenTurns.has(key)) {
+          turnDeduped = true
+        } else {
+          seenTurns.add(key)
+          if (seenTurns.size > 500) seenTurns.clear()
+        }
+      }
       agentDiscovery?.markActivity(source)
       store?.append(tagged)
       const today = store?.todayTokens() ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0, calls: 0 }
-      // 按 agent 开关过滤：该 agent 未启用监控则忽略其事件
-      if (!isAgentWatched(source)) return
+      // 按 agent 开关过滤：该 agent 未启用监控则忽略其事件；回合重复跳过提醒
+      if (!isAgentWatched(source) || turnDeduped) return
       notifier?.handleEvent(tagged, { todayInput: today.input, todayOutput: today.output })
       if (tagged.type === 'usage') broadcastToRenderer('pet:usage', tagged)
       if (tagged.type === 'task-end') broadcastToRenderer('pet:task-end', tagged)
@@ -315,11 +328,23 @@ function wireSse(client: SseClient): void {
     if (event.type === 'task-end' && taskTracker) {
       event = taskTracker.enrich(event)
     }
+    // 回合级去重：插件更新/重连期间同一回合可能重复发（seq 不同），只提醒一次
+    let turnDeduped = false
+    if (event.type === 'task-end' && event.kind === 'turn' && typeof event.turn === 'number' && event.sessionId) {
+      const key = `${event.sessionId}|${event.turn}`
+      if (seenTurns.has(key)) {
+        turnDeduped = true
+      } else {
+        seenTurns.add(key)
+        // 防止无限增长：超过 500 个回合键时清空（重启窗口）
+        if (seenTurns.size > 500) seenTurns.clear()
+      }
+    }
     agentDiscovery?.markActivity('dsh')
     store?.append(event)
     const today = store?.todayTokens() ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0, calls: 0 }
-    // 按 agent 开关过滤：dsh 未启用监控则忽略
-    if (isAgentWatched('dsh')) {
+    // 按 agent 开关过滤：dsh 未启用监控则忽略；回合重复跳过提醒
+    if (isAgentWatched('dsh') && !turnDeduped) {
       notifier?.handleEvent(event, { todayInput: today.input, todayOutput: today.output })
     }
 
