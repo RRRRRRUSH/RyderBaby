@@ -69,6 +69,11 @@ function getHashRoute(): string {
   return window.location.hash
 }
 
+/** 是否设置窗口：仅带 ?settings=1 的窗口渲染设置页（主窗口忽略 hash） */
+function isSettingsWindow(): boolean {
+  return new URLSearchParams(window.location.search).get('settings') === '1'
+}
+
 export default function App(): React.JSX.Element {
   const [route, setRoute] = useState(getHashRoute)
 
@@ -78,7 +83,7 @@ export default function App(): React.JSX.Element {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  if (route.startsWith('#/settings')) {
+  if (isSettingsWindow() && route.startsWith('#/settings')) {
     return <SettingsPage />
   }
 

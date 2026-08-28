@@ -18,7 +18,7 @@ body {
 }
 
 .settings-sidebar {
-  width: 180px;
+  width: 168px;
   flex-shrink: 0;
   background: #1c2333;
   color: #cdd5e3;
@@ -78,7 +78,9 @@ body {
 .settings-content {
   flex: 1;
   padding: 28px 32px;
-  max-width: 720px;
+  max-width: 860px;
+  min-width: 0;
+  overflow-y: auto;
 }
 
 .page-section {

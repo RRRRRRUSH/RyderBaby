@@ -53,8 +53,15 @@ export interface SessionAggregate {
 
 const MAX_EVENTS_ON_DISK = 20000
 
+/** 事件幂等键：seq 会随插件重启重置，必须组合 ts+type 才能唯一识别 */
+function eventKey(e: PetEvent): string {
+  return `${e.seq}|${e.ts}|${e.type}`
+}
+
 export class JsonEventStore implements EventStore {
   private events: PetEvent[] = []
+  private seenKeys = new Set<string>()
+  private maxKnownTs = 0
   private totals: TokenTotals = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0, calls: 0 }
   private byModel: Record<string, { input: number; output: number; calls: number }> = {}
   private sessions: Record<string, SessionAggregate> = {}
@@ -72,6 +79,9 @@ export class JsonEventStore implements EventStore {
       if (!existsSync(this.filePath)) return
       const raw = JSON.parse(readFileSync(this.filePath, 'utf-8'))
       if (Array.isArray(raw.events)) this.events = raw.events
+      // 重建幂等键集合与最大时间戳：防止插件重启后 snapshot 重放已存事件
+      this.seenKeys = new Set(this.events.map(eventKey))
+      this.maxKnownTs = this.events.reduce((m, e) => Math.max(m, e.ts), 0)
       // totals/byModel/sessions 不从磁盘信任：插件重启会带零值 snapshot 覆盖，
       // 唯一可靠来源是事件表本身，每次启动全量重算。
       this.rebuildAggregates()
@@ -121,29 +131,38 @@ export class JsonEventStore implements EventStore {
     // snapshot 不是普通事件：携带插件进程内的 recent 窗口与进程内 totals。
     // 桌宠本地才是永久累计的权威（插件可能重启清零），所以：
     // 1) totals 不覆盖本地累计（除非本地完全没有数据）
-    // 2) recent 按 seq 去重补录，弥合断线期间丢失的事件
+    // 2) recent 只补录"时间晚于本地最后事件"的事件（重启/重连间隙的丢失），
+    //    避免插件 recent 窗口把历史事件反复重放
     if (event.type === 'snapshot') {
       if (this.events.length === 0 && event.totals) {
         this.totals = event.totals
       }
-      if (Array.isArray(event.recent)) {
-        const known = new Set(this.events.map((e) => e.seq))
+      if (Array.isArray(event.recent) && event.recent.length > 0) {
         for (const e of event.recent) {
-          if (e && typeof e.seq === 'number' && !known.has(e.seq)) {
-            this.events.push(e as PetEvent)
-            known.add(e.seq)
-            this.accumulate(e as PetEvent)
-          }
+          if (!e || typeof e.seq !== 'number') continue
+          // 只补比本地已知最新事件更新的（重启/重连间隙的丢失）
+          if (e.ts <= this.maxKnownTs) continue
+          const key = eventKey(e as PetEvent)
+          if (this.seenKeys.has(key)) continue
+          this.seenKeys.add(key)
+          this.events.push(e as PetEvent)
+          this.accumulate(e as PetEvent)
+          if (e.ts > this.maxKnownTs) this.maxKnownTs = e.ts
         }
         if (event.recent.length > 0) {
-          this.events.sort((a, b) => a.seq - b.seq)
+          this.events.sort((a, b) => a.ts - b.ts || a.seq - b.seq)
         }
       }
       this.persist()
       return
     }
-    this.events.push(event as PetEvent)
-    this.accumulate(event as PetEvent)
+    // 普通事件也按幂等键去重（实时流可能重复投递）
+    const key = eventKey(event)
+    if (this.seenKeys.has(key)) return
+    this.seenKeys.add(key)
+    this.events.push(event)
+    if (event.ts > this.maxKnownTs) this.maxKnownTs = event.ts
+    this.accumulate(event)
     this.persist()
   }
 

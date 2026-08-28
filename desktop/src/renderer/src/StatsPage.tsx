@@ -37,24 +37,24 @@ export default function StatsPage(): React.JSX.Element {
       },
       legend: {
         data: ['total', 'input', 'output', 'cacheRead'],
-        textStyle: { color: '#9aa3b2', fontSize: 11 },
+        textStyle: { color: '#6b7280', fontSize: 11 },
         top: 0
       },
-      grid: { left: 52, right: 16, top: 28, bottom: 24 },
+      grid: { left: 56, right: 16, top: 28, bottom: 24 },
       xAxis: {
         type: 'category',
         data: data.map((d) => d.label),
-        axisLine: { lineStyle: { color: '#3a4150' } },
-        axisLabel: { color: '#9aa3b2', fontSize: 10 }
+        axisLine: { lineStyle: { color: '#d1d5db' } },
+        axisLabel: { color: '#6b7280', fontSize: 10 }
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: '#9aa3b2',
+          color: '#6b7280',
           fontSize: 10,
           formatter: (v: number) => fmtTokens(v)
         },
-        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } }
+        splitLine: { lineStyle: { color: '#eef1f7' } }
       },
       series: [
         {

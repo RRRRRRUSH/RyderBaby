@@ -71,8 +71,10 @@ function createSettingsWindow(): void {
     return
   }
   settingsWindow = new BrowserWindow({
-    width: 460,
-    height: 640,
+    width: 720,
+    height: 560,
+    minWidth: 640,
+    minHeight: 480,
     title: 'RyderBaby 设置',
     resizable: true,
     minimizable: true,
@@ -85,9 +87,12 @@ function createSettingsWindow(): void {
   })
 
   if (process.env.ELECTRON_RENDERER_URL) {
-    settingsWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}#/settings`)
+    settingsWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}?settings=1#/settings`)
   } else {
-    settingsWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: '/settings' })
+    settingsWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { settings: '1' },
+      hash: '/settings'
+    })
   }
 
   settingsWindow.on('closed', () => {
