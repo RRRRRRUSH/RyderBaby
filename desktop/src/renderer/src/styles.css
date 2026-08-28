@@ -274,9 +274,10 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
-.hud-top {
+.hud-status {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.92);
@@ -321,17 +322,17 @@ body {
 .hud-main {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 4px;
-  font-size: 12px;
+  padding-top: 5px;
+  margin-top: 4px;
 }
 
 .hud-token {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 700;
   color: #e8edf7;
+  font-size: 15px;
 }
 
 .hud-token em {
@@ -342,10 +343,20 @@ body {
   margin-left: 3px;
 }
 
+.hud-cost-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 3px;
+  margin-top: 4px;
+}
+
 .hud-cost {
   font-variant-numeric: tabular-nums;
   color: #fbbf24;
   font-weight: 600;
+  font-size: 11px;
 }
 
 .hud-model {
@@ -354,7 +365,8 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
+  margin-left: 4px;
 }
 
 /* 自定义图片图标 */

@@ -27,6 +27,8 @@ let agentDiscovery: AgentDiscovery | null = null
 let taskTracker: TaskTracker | null = null
 /** 回合级去重：同一会话同一回合号只推送一次（插件更新/重连可能重复发） */
 const seenTurns = new Set<string>()
+/** 活跃 agent 集合：多 agent 并发状态汇总（任一 running 即 working） */
+const activeAgents = new Set<string>()
 let connectionState: ConnectionState = 'offline'
 let petMood: string = 'idle'
 let lastReminder: Reminder | null = null
@@ -350,7 +352,7 @@ function wireSse(client: SseClient): void {
   client.on('state', (state: ConnectionState) => {
     connectionState = state
     if (state === 'connected') {
-      petMood = 'idle'
+      petMood = activeAgents.size > 0 ? 'working' : 'idle'
       notifier?.setMuted(false)
       broadcastToRenderer('pet:connection', state)
       broadcastToRenderer('pet:mood', petMood)
@@ -394,12 +396,18 @@ function wireSse(client: SseClient): void {
       notifier?.handleEvent(event, { todayInput: today.input, todayOutput: today.output })
     }
 
-    // 状态折叠：working / idle
+    // 状态折叠：多 agent 并发时只要有任意 agent running 就是 working
     if (event.type === 'agent-status') {
       if (event.state === 'running') taskTracker?.onAgentRunning(event.agentId)
       else taskTracker?.onAgentIdle(event.agentId)
-      petMood = event.state === 'running' ? 'working' : petMood === 'working' ? 'idle' : petMood
-      broadcastToRenderer('pet:mood', petMood)
+      // 活跃 agent 集合：running 加入，idle 移除
+      if (event.state === 'running') activeAgents.add(event.agentId)
+      else activeAgents.delete(event.agentId)
+      const nextMood = activeAgents.size > 0 ? 'working' : 'idle'
+      if (nextMood !== petMood) {
+        petMood = nextMood
+        broadcastToRenderer('pet:mood', petMood)
+      }
     }
     if (event.type === 'usage') {
       broadcastToRenderer('pet:usage', event)

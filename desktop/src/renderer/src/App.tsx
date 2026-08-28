@@ -276,12 +276,11 @@ function PetWindow(): React.JSX.Element {
         <div className="pet-status">{moodText}</div>
       </div>
 
-      {/* HUD：玻璃拟态信息卡 */}
+      {/* HUD：玻璃拟态信息卡（居中布局） */}
       <div className="pet-hud">
-        <div className="hud-top">
+        <div className="hud-status">
           <span className={`hud-dot dot-${connection}`} />
           <span className="hud-conn">{connText}</span>
-          <span className="hud-spacer" />
           {latestUsage && <span className="hud-model">{sourceTag ?? latestUsage.model}</span>}
         </div>
         <div className="hud-main">
@@ -289,6 +288,8 @@ function PetWindow(): React.JSX.Element {
             ⚡ {fmtTokens(todayTokens)}
             <em>{i18n.t('today')}</em>
           </span>
+        </div>
+        <div className="hud-cost-row">
           <span className="hud-cost">💰 {fmtCost(todayCost)}</span>
         </div>
       </div>
