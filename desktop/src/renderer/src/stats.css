@@ -103,13 +103,87 @@
   margin-top: 4px;
 }
 
-/* 图表弹性撑满剩余空间（窗口拉伸时跟随） */
+/* 图表固定高度（下方有会话列表，页面整体滚动） */
 .chart-box {
-  flex: 1;
+  height: 280px;
   min-height: 200px;
+  flex-shrink: 0;
   background: #fff;
   border: 1px solid #e4e7ee;
   border-radius: 10px;
   padding: 8px;
   box-shadow: 0 1px 2px rgba(20, 24, 40, 0.04);
+}
+
+/* 按会话统计 */
+.sessions-section {
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+
+.sessions-section h3 {
+  font-size: 13.5px;
+  color: #4b5563;
+  margin: 0 0 10px;
+}
+
+.session-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.session-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1f2430;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.session-turns {
+  font-size: 11px;
+  color: #8a93a6;
+  flex-shrink: 0;
+}
+
+.session-nums {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.session-tokens {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1f2430;
+}
+
+.session-cost {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #b45309;
 }

@@ -7,11 +7,13 @@ import type { AppSettings } from '../../shared/settings'
 import './stats.css'
 
 type HistoryPoint = { ts: number; label: string; total: number; input: number; output: number; cacheRead: number }
+type SessionRow = { id: string; title: string; input: number; output: number; cacheRead: number; tokens: number; cost: number; turns: number }
 
 export default function StatsPage(): React.JSX.Element {
   const [bucket, setBucket] = useState<'hour' | 'day'>('day')
   const [days, setDays] = useState(7)
   const [data, setData] = useState<HistoryPoint[]>([])
+  const [sessions, setSessions] = useState<SessionRow[]>([])
   const [aggregate, setAggregate] = useState<{
     totals: { input: number; output: number; cacheRead: number; cacheWrite: number; reasoning: number; calls: number }
     taskCount: number
@@ -27,6 +29,7 @@ export default function StatsPage(): React.JSX.Element {
       setAggregate(s.aggregate ?? null)
       setSettings(s.settings as AppSettings)
     })
+    void window.pet.getSessions().then((s) => setSessions(s as SessionRow[]))
   }, [bucket, days])
 
   useEffect(() => {
@@ -161,6 +164,29 @@ export default function StatsPage(): React.JSX.Element {
       </div>
 
       <div ref={chartRef} className="chart-box" />
+
+      {/* 按会话统计 */}
+      <div className="sessions-section">
+        <h3>{t('statsBySession')}</h3>
+        {sessions.length === 0 ? (
+          <p className="hint">{t('statsNoSession')}</p>
+        ) : (
+          <div className="session-table">
+            {sessions.map((s) => (
+              <div key={s.id} className="session-row">
+                <div className="session-info">
+                  <span className="session-title" title={s.id}>{s.title}</span>
+                  <span className="session-turns">🔄 {s.turns} 回合</span>
+                </div>
+                <div className="session-nums">
+                  <span className="session-tokens">⚡ {fmtTokens(s.tokens)}</span>
+                  <span className="session-cost">💰 {fmtCost(s.cost)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

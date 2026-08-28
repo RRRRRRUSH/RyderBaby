@@ -10,6 +10,7 @@ const api: PetApiShape = {
   listAgents: () => ipcRenderer.invoke('pet:list-agents'),
   getTokenHistory: (opts?: { bucket?: 'hour' | 'day'; days?: number }) =>
     ipcRenderer.invoke('pet:get-token-history', opts),
+  getSessions: () => ipcRenderer.invoke('pet:get-sessions'),
   setMuted: (muted: boolean) => ipcRenderer.invoke('pet:set-muted', muted),
   setPaused: (paused: boolean) => ipcRenderer.invoke('pet:set-paused', paused),
   minimizeWindow: () => ipcRenderer.invoke('pet:minimize-window'),

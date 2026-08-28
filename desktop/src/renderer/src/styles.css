@@ -29,6 +29,110 @@ body {
   position: relative;
 }
 
+/* ---------- 悬浮详情卡 ---------- */
+.hover-card {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  background: rgba(15, 18, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+  animation: hover-in 0.18s ease-out;
+  pointer-events: none;
+}
+
+@keyframes hover-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.hover-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 7px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hover-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8edf7;
+}
+
+.hover-mood {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: auto;
+}
+
+.hover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 2px 0;
+}
+
+.hover-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #e8edf7;
+}
+
+.hover-cost {
+  color: #fbbf24;
+}
+
+.hover-sessions {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hover-sess-title {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.hover-sess-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10.5px;
+  padding: 2px 0;
+}
+
+.hover-sess-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hover-sess-nums {
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
 /* ---------- 气泡 ---------- */
 .bubble {
   position: absolute;

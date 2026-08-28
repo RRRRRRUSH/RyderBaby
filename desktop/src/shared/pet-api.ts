@@ -9,6 +9,9 @@ export interface PetApiShape {
   getTokenHistory(opts?: { bucket?: 'hour' | 'day'; days?: number }): Promise<
     Array<{ ts: number; label: string; total: number; input: number; output: number; cacheRead: number }>
   >
+  getSessions(): Promise<
+    Array<{ id: string; title: string; input: number; output: number; cacheRead: number; tokens: number; cost: number; turns: number }>
+  >
   setMuted(muted: boolean): Promise<{ ok: boolean }>
   setPaused(paused: boolean): Promise<{ ok: boolean }>
   minimizeWindow(): Promise<{ ok: boolean }>

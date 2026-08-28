@@ -118,16 +118,43 @@ function PetWindow(): React.JSX.Element {
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fxTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [, setLangTick] = useState(0)
+  // 悬浮详情卡
+  const [hovered, setHovered] = useState(false)
+  const [sessions, setSessions] = useState<Array<{ id: string; title: string; tokens: number; cost: number; turns: number }>>([])
 
-  // 点击穿透切换：透明区域穿透鼠标，宠物本体/HUD 上可交互
+  // 悬浮时加载会话数据
   useEffect(() => {
+    if (!hovered) return
+    let disposed = false
+    void window.pet.getSessions().then((s) => {
+      if (!disposed) setSessions((s as Array<{ id: string; title: string; tokens: number; cost: number; turns: number }>).slice(0, 5))
+    })
+    return () => {
+      disposed = true
+    }
+  }, [hovered])
+
+  // 点击穿透切换：鼠标在窗口内任意位置即可交互（拖动把手在 pet-shell 上）
+  // 穿透状态下 forward 仍会转发 mousemove 用于判断
+  useEffect(() => {
+    let dragging = false
     const onMove = (e: MouseEvent): void => {
-      const el = document.elementFromPoint(e.clientX, e.clientY)
-      // 可交互区域：宠物主体、HUD、气泡
-      const interactive = !!el?.closest('.pet-body, .pet-hud, .bubble')
+      // 拖动期间保持可交互（不打断拖拽）
+      if (dragging) return
+      const interactive = e.target instanceof Element && !!e.target.closest('.pet-shell')
       void window.pet.setIgnoreMouse(!interactive)
     }
+    const onDown = (): void => {
+      dragging = true
+      void window.pet.setIgnoreMouse(false)
+    }
+    const onUp = (): void => {
+      dragging = false
+      // 鼠标可能已离开窗口，交给后续 mousemove 判断
+    }
     window.addEventListener('mousemove', onMove)
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('mouseup', onUp)
     // 离开窗口恢复穿透
     const onLeave = (): void => {
       void window.pet.setIgnoreMouse(true)
@@ -135,6 +162,8 @@ function PetWindow(): React.JSX.Element {
     document.addEventListener('mouseleave', onLeave)
     return () => {
       window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('mouseup', onUp)
       document.removeEventListener('mouseleave', onLeave)
     }
   }, [])
@@ -254,7 +283,11 @@ function PetWindow(): React.JSX.Element {
     : latestUsage?.provider
 
   return (
-    <div className={`pet-shell mood-${mood} conn-${connection}${strongFx ? (strongFx.ok ? ' fx-happy' : ' fx-worried') : ''}`}>
+    <div
+      className={`pet-shell mood-${mood} conn-${connection}${strongFx ? (strongFx.ok ? ' fx-happy' : ' fx-worried') : ''}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {strongFx && (
         <div className="particles" key={strongFx.key}>
           {PARTICLE_EMOJIS.map((p, i) => (
@@ -268,6 +301,36 @@ function PetWindow(): React.JSX.Element {
       {bubble && (
         <div className="bubble">
           <span className="bubble-text">{bubble}</span>
+        </div>
+      )}
+
+      {/* 悬浮详情卡 */}
+      {hovered && (
+        <div className="hover-card">
+          <div className="hover-head">
+            <span className={`hud-dot dot-${connection}`} />
+            <span className="hover-title">{connText}</span>
+            <span className="hover-mood">{moodText}</span>
+          </div>
+          <div className="hover-row">
+            <span>今日 Token</span>
+            <span className="hover-val">⚡ {fmtTokens(todayTokens)}</span>
+          </div>
+          <div className="hover-row">
+            <span>估算花费</span>
+            <span className="hover-val hover-cost">💰 {fmtCost(todayCost)}</span>
+          </div>
+          {sessions.length > 0 && (
+            <div className="hover-sessions">
+              <div className="hover-sess-title">按会话</div>
+              {sessions.map((s) => (
+                <div key={s.id} className="hover-sess-row">
+                  <span className="hover-sess-name" title={s.id}>{s.title}</span>
+                  <span className="hover-sess-nums">⚡{fmtTokens(s.tokens)} · 💰{fmtCost(s.cost)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

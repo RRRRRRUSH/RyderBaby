@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, screen, Tray } from 'electron'
 import { join } from 'node:path'
 import { SseClient } from './sse-client'
 import { JsonEventStore, type EventStore } from './store'
@@ -35,9 +35,16 @@ let lastReminder: Reminder | null = null
 let quitting = false
 
 function createWindow(): void {
+  // 初始位置：主屏右下角（桌宠习惯位置），避开任务栏
+  const wa = screen.getPrimaryDisplay().workArea
+  const posX = wa.x + wa.width - 260 - 16
+  const posY = wa.y + wa.height - 320 - 16
+
   mainWindow = new BrowserWindow({
     width: 260,
     height: 320,
+    x: posX,
+    y: posY,
     frame: false,
     transparent: true,
     resizable: false,
@@ -171,6 +178,38 @@ function setupIpc(): void {
   ipcMain.handle('pet:get-token-history', (_e, opts?: { bucket?: 'hour' | 'day'; days?: number }) => {
     if (!store) return []
     return store.tokenHistory(opts?.bucket ?? 'day', opts?.days ?? 7)
+  })
+
+  // 按会话统计：每个会话的 token/花费/回合数
+  ipcMain.handle('pet:get-sessions', () => {
+    if (!store || !settingsStore) return []
+    const pricing = settingsStore.get().pricing
+    const agg = store.aggregate()
+    // 会话标题：从事件表找最近一次 sessionTitle
+    const titleOf = new Map<string, string>()
+    const turnsOf = new Map<string, number>()
+    for (const e of store.query()) {
+      if (e.type === 'task-end' && e.kind === 'turn') {
+        if (e.sessionId) {
+          if (e.sessionTitle) titleOf.set(e.sessionId, e.sessionTitle)
+          turnsOf.set(e.sessionId, (turnsOf.get(e.sessionId) ?? 0) + 1)
+        }
+      }
+    }
+    const out: Array<{ id: string; title: string; input: number; output: number; cacheRead: number; tokens: number; cost: number; turns: number }> = []
+    for (const [id, s] of Object.entries(agg.sessions)) {
+      out.push({
+        id,
+        title: titleOf.get(id) ?? id.slice(0, 12),
+        input: s.input,
+        output: s.output,
+        cacheRead: s.cacheRead,
+        tokens: s.input + s.output + s.cacheRead + s.cacheWrite,
+        cost: calcCost({ input: s.input, output: s.output, cacheRead: s.cacheRead }, pricing),
+        turns: turnsOf.get(id) ?? 0
+      })
+    }
+    return out.sort((a, b) => b.tokens - a.tokens)
   })
 
   ipcMain.handle('pet:set-muted', (_e, muted: boolean) => {
@@ -390,6 +429,26 @@ function wireSse(client: SseClient): void {
     }
     agentDiscovery?.markActivity('dsh')
     store?.append(event)
+
+    // 快照：重建活跃 agent 集合（重启/重连后状态恢复）
+    if (event.type === 'snapshot') {
+      const recent = event.recent ?? []
+      const lastState = new Map<string, string>()
+      for (const e of recent) {
+        if (e.type === 'agent-status' && e.agentId) lastState.set(e.agentId, e.state)
+      }
+      activeAgents.clear()
+      for (const [id, st] of lastState) {
+        if (st === 'running') activeAgents.add(id)
+      }
+      const nextMood = activeAgents.size > 0 ? 'working' : 'idle'
+      if (nextMood !== petMood) {
+        petMood = nextMood
+        broadcastToRenderer('pet:mood', petMood)
+      }
+      return
+    }
+
     const today = store?.todayTokens() ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, reasoning: 0, calls: 0 }
     // 按 agent 开关过滤：dsh 未启用监控则忽略；回合重复跳过提醒
     if (isAgentWatched('dsh') && !turnDeduped) {

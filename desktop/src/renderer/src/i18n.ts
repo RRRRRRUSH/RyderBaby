@@ -52,6 +52,8 @@ const dict = {
     statsCalls: '调用次数',
     statsTasks: '任务数',
     statsCost: '估算花费',
+    statsBySession: '按会话',
+    statsNoSession: '暂无会话数据',
     // 推送
     secPush: '推送渠道',
     pushHint: '渠道开启后，L2 级提醒（任务失败/断线/token 预警）会同步推送到对应平台。',
@@ -145,6 +147,8 @@ const dict = {
     statsCalls: 'Calls',
     statsTasks: 'Tasks',
     statsCost: 'Est. cost',
+    statsBySession: 'By session',
+    statsNoSession: 'No session data',
     secPush: 'Push Channels',
     pushHint: 'When enabled, L2 reminders (failure/disconnect/budget) are pushed to the platform.',
     enableChannel: 'Enabled',
