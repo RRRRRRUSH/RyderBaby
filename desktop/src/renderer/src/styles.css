@@ -1,0 +1,364 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+html,
+body {
+  background: transparent;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 整窗可拖拽（桌宠本体），内部按钮用 no-drag */
+.pet-shell {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  -webkit-app-region: drag;
+  position: relative;
+}
+
+/* ---------- 气泡 ---------- */
+.bubble {
+  position: absolute;
+  bottom: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 22, 28, 0.92);
+  color: #f0f2f5;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px 12px;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: bubble-in 0.25s ease-out;
+  z-index: 10;
+}
+
+.bubble-text {
+  font-size: 12px;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* ---------- 宠物主体 ---------- */
+.pet-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pet-emoji {
+  font-size: 64px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  transform-origin: bottom center;
+}
+
+.pet-status {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: 2px 10px;
+}
+
+/* ---------- 状态动画 ---------- */
+.mood-idle .pet-emoji {
+  animation: idle-breathe 3s ease-in-out infinite;
+}
+
+.mood-working .pet-emoji {
+  animation: working-shake 0.9s ease-in-out infinite;
+}
+
+.mood-happy .pet-emoji {
+  animation: happy-jump 0.6s ease-in-out infinite;
+}
+
+.mood-worried .pet-emoji {
+  animation: worried-sigh 2.4s ease-in-out infinite;
+}
+
+.mood-panicked .pet-emoji {
+  animation: panicked-rush 0.4s linear infinite;
+}
+
+.mood-offline .pet-emoji,
+.mood-sleeping .pet-emoji {
+  animation: sleeping-zzz 2.8s ease-in-out infinite;
+}
+
+@keyframes idle-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04, 0.97);
+  }
+}
+
+@keyframes working-shake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+  75% {
+    transform: translateY(-2px) rotate(4deg);
+  }
+}
+
+@keyframes happy-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) scale(1.06);
+  }
+}
+
+@keyframes worried-sigh {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.94, 1.04);
+    opacity: 0.75;
+  }
+}
+
+@keyframes panicked-rush {
+  0% {
+    transform: translateX(-6px) rotate(-8deg);
+  }
+  50% {
+    transform: translateX(6px) rotate(8deg);
+  }
+  100% {
+    transform: translateX(-6px) rotate(-8deg);
+  }
+}
+
+@keyframes sleeping-zzz {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96, 1.02);
+  }
+}
+
+/* ---------- 强提醒 FX（声音 + 动画，任务结束时） ---------- */
+.fx-happy .pet-emoji {
+  animation: fx-bounce 0.5s ease-in-out 3;
+}
+
+.fx-worried .pet-emoji {
+  animation: fx-shake 0.35s ease-in-out 4;
+}
+
+@keyframes fx-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-22px) scale(1.12);
+  }
+}
+
+@keyframes fx-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px) rotate(-8deg);
+  }
+  75% {
+    transform: translateX(10px) rotate(8deg);
+  }
+}
+
+/* 粒子飘落 */
+.particles {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: 120px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.particle {
+  position: absolute;
+  top: -12px;
+  font-size: 18px;
+  animation: particle-fall 2.2s ease-in forwards;
+}
+
+@keyframes particle-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+/* 背景闪光 */
+.fx-happy,
+.fx-worried {
+  animation: bg-flash 0.3s ease-in-out 3;
+}
+
+@keyframes bg-flash {
+  0%,
+  100% {
+    background: transparent;
+  }
+  50% {
+    background: rgba(255, 255, 255, 0.16);
+  }
+}
+
+/* ---------- HUD（玻璃拟态信息卡） ---------- */
+.pet-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(15, 18, 26, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 7px 12px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(8px);
+  min-width: 150px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.hud-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.hud-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-connected {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.dot-reconnecting {
+  background: #fbbf24;
+  animation: blink 1s infinite;
+}
+
+.dot-offline {
+  background: #f87171;
+  box-shadow: 0 0 6px #f87171;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.hud-conn {
+  font-weight: 600;
+}
+
+.hud-spacer {
+  flex: 1;
+}
+
+.hud-today {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #e8edf7;
+}
+
+.hud-today em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-left: 2px;
+}
+
+.hud-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 4px;
+}
+
+.hud-model {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-cache {
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* 自定义图片图标 */
+.custom-icon-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  pointer-events: none;
+}

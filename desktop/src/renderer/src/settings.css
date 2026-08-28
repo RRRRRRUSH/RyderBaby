@@ -1,0 +1,366 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f2f4f8;
+  color: #1f2430;
+}
+
+/* ---------- 侧边栏布局 ---------- */
+.settings-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.settings-sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  background: #1c2333;
+  color: #cdd5e3;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-brand {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 4px 20px 16px;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav-item {
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #aab4c8;
+  font-size: 13px;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6ebf5;
+}
+
+.nav-item.active {
+  background: rgba(79, 110, 242, 0.18);
+  color: #fff;
+  border-left-color: #4f6ef2;
+}
+
+.saving-tip {
+  padding: 8px 20px;
+  font-size: 11px;
+  color: #8b95a9;
+}
+
+/* ---------- 内容区 ---------- */
+.settings-content {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 720px;
+}
+
+.page-section {
+  margin-bottom: 20px;
+}
+
+.page-section h2 {
+  font-size: 16px;
+  margin: 0 0 14px;
+  color: #1f2430;
+  border-bottom: 1px solid #e4e7ee;
+  padding-bottom: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.col span {
+  color: #4b5563;
+}
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+select {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 13px;
+  width: 100%;
+  background: #fff;
+  color: #1f2430;
+}
+
+input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4f6ef2;
+}
+
+.hint {
+  font-size: 11px;
+  color: #8a93a6;
+  margin: 4px 0 12px;
+}
+
+/* ---------- 渠道卡片 ---------- */
+.channel-card {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.channel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.channel-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.badge-ok {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.channel-fields {
+  margin-top: 8px;
+}
+
+/* ---------- 测试推送 ---------- */
+.test-row button,
+.icon-actions button {
+  padding: 8px 18px;
+  background: #4f6ef2;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.test-row button:disabled,
+.icon-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.icon-actions button {
+  background: #eef1f7;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.test-results {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.test-results .ok {
+  color: #15803d;
+}
+
+.test-results .fail {
+  color: #b91c1c;
+}
+
+/* ---------- 自定义图标网格 ---------- */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.icon-cell {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.icon-preview {
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.icon-cell input {
+  text-align: center;
+  font-size: 12px;
+  padding: 5px 6px;
+}
+
+/* ---------- Agent 卡片 ---------- */
+.agent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-card {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-status-dot.on {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.agent-status-dot.standby {
+  background: #fbbf24;
+}
+
+.agent-status-dot.off {
+  background: #d1d5db;
+}
+
+.agent-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-live {
+  background: #dcfce7;
+  color: #15803d;
+  animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.agent-detail {
+  font-size: 11px;
+  color: #8a93a6;
+  margin: 6px 0 10px;
+}
+
+.agent-toggles {
+  display: flex;
+  gap: 16px;
+}
+
+.toggle-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4b5563;
+  background: #f6f7fa;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.toggle-pill input {
+  accent-color: #4f6ef2;
+}
+
+/* ---------- 子区块（命令级提醒） ---------- */
+.sub-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #e4e7ee;
+}
+
+.sub-section h3 {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0 0 4px;
+}
+
+/* ---------- 关于 ---------- */
+.about-box {
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+}
+
+.about-logo {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.about-box p {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.6;
+}
