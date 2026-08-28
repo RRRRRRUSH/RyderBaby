@@ -26,6 +26,10 @@ export interface ReminderSettings {
   notifyCommandSuccess: boolean
   /** 命令级（job）失败是否提醒（默认 true） */
   notifyCommandFailure: boolean
+  /** 全局静音（托盘/设置页开关） */
+  muted: boolean
+  /** 暂停提醒（托盘/设置页开关） */
+  paused: boolean
 }
 
 export interface AppearanceSettings {
@@ -84,7 +88,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
     dailyTokenBudget: 1000000,
     warningLevels: [0.5, 0.8, 1.0],
     notifyCommandSuccess: false,
-    notifyCommandFailure: true
+    notifyCommandFailure: true,
+    muted: false,
+    paused: false
   },
   push: {
     dingtalk: {

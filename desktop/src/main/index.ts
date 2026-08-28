@@ -135,23 +135,67 @@ function createSettingsWindow(): void {
 function createTray(): void {
   const trayIcon = nativeImage.createFromPath(join(ICON_DIR, 'tray.png'))
   tray = new Tray(trayIcon.isEmpty() ? nativeImage.createEmpty() : trayIcon)
+  tray.setToolTip('RyderBaby 桌宠')
+  rebuildTrayMenu()
+  tray.on('click', () => showPet())
+  tray.on('double-click', () => showPet())
+}
+
+/** 重建托盘菜单：状态从设置读取，点击写回设置 */
+function rebuildTrayMenu(): void {
+  if (!tray) return
+  const s = settingsStore?.get()
+  const muted = s?.reminders.muted ?? false
+  const paused = s?.reminders.paused ?? false
   const ctx = Menu.buildFromTemplate([
     { label: '显示桌宠', click: () => showPet() },
     { label: '设置…', click: () => createSettingsWindow() },
-    { label: '静音提醒', type: 'checkbox', checked: false, click: (item) => notifier?.setMuted(item.checked) },
-    { label: '暂停提醒', type: 'checkbox', checked: false, click: (item) => notifier?.setPaused(item.checked) },
+    { type: 'separator' },
+    {
+      label: '静音提醒',
+      type: 'checkbox',
+      checked: muted,
+      click: (item) => setMutedState(item.checked)
+    },
+    {
+      label: '暂停提醒',
+      type: 'checkbox',
+      checked: paused,
+      click: (item) => setPausedState(item.checked)
+    },
     { type: 'separator' },
     { label: '退出', click: () => { quitting = true; app.quit() } }
   ])
-  tray.setToolTip('RyderBaby 桌宠')
   tray.setContextMenu(ctx)
-  tray.on('click', () => showPet())
+}
+
+/** 静音状态：写设置 + 通知运行组件 */
+function setMutedState(muted: boolean): void {
+  notifier?.setMuted(muted)
+  const s = settingsStore?.get()
+  if (s) {
+    settingsStore?.update({ reminders: { ...s.reminders, muted } })
+    broadcastToRenderer('pet:muted', muted)
+  }
+}
+
+/** 暂停状态：写设置 + 通知运行组件 */
+function setPausedState(paused: boolean): void {
+  notifier?.setPaused(paused)
+  const s = settingsStore?.get()
+  if (s) {
+    settingsStore?.update({ reminders: { ...s.reminders, paused } })
+    broadcastToRenderer('pet:paused', paused)
+  }
 }
 
 function showPet(): void {
-  if (!mainWindow) return
-  mainWindow.show()
-  mainWindow.focus()
+  // 窗口被销毁则重建（托盘常驻，主窗可能被系统回收）
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow()
+  }
+  mainWindow?.show()
+  mainWindow?.focus()
 }
 
 function setupIpc(): void {
@@ -335,6 +379,9 @@ function setupDataPlumbing(): void {
     notifyCommandSuccess: settingsStore.get().reminders.notifyCommandSuccess,
     notifyCommandFailure: settingsStore.get().reminders.notifyCommandFailure
   })
+  // 应用持久化的静音/暂停状态
+  notifier.setMuted(settingsStore.get().reminders.muted)
+  notifier.setPaused(settingsStore.get().reminders.paused)
   // 会话 token 查询（卡片补充用）：按 sessionId 从 store 累计
   notifier.sessionTokenFn = (sessionId: string) => {
     if (!store || !sessionId) return 0
@@ -572,9 +619,9 @@ app.whenReady().then(() => {
   Menu.setApplicationMenu(appMenu)
 
   setupIpc()
+  setupDataPlumbing()
   createWindow()
   createTray()
-  setupDataPlumbing()
   applySettings(settingsStore!.get())
 
   app.on('activate', () => {
