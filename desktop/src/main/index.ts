@@ -183,8 +183,8 @@ function applySettings(settings: AppSettings): void {
       notifyTaskLevel: settings.agents.watch.dsh || settings.agents.watch['claude-code'] || settings.agents.watch.codex
     })
   }
-  // 外部工具监视器：按设置启停
-  applyExternalWatcher(settings.external)
+  // 外部工具监视器：由 agents.watch 驱动（claude-code / codex 的监控开关）
+  applyExternalWatcher(settings.agents.watch)
   // DSH 地址变更：重启 SSE 连接（仅地址确实不同时）
   if (sse && settings.dshUrl.trim()) {
     const target = `${settings.dshUrl.trim().replace(/\/$/, '')}/pet/events`
@@ -197,14 +197,14 @@ function applySettings(settings: AppSettings): void {
   }
 }
 
-function applyExternalWatcher(cfg: AppSettings['external']): void {
-  const want = cfg.claudeCode || cfg.codex
+function applyExternalWatcher(watch: Record<string, boolean>): void {
+  const wantClaude = watch['claude-code'] === true
+  const wantCodex = watch.codex === true
+  const want = wantClaude || wantCodex
   if (want && !externalWatcher) {
     const watcher = new ExternalWatcher({
-      watchClaude: cfg.claudeCode,
-      watchCodex: cfg.codex,
-      claudeRoot: cfg.claudeRoot.trim() || undefined,
-      codexRoot: cfg.codexRoot.trim() || undefined
+      watchClaude: wantClaude,
+      watchCodex: wantCodex
     })
     watcher.on('event', ({ event, source }) => {
       // 标记来源并注册活跃度
@@ -224,7 +224,7 @@ function applyExternalWatcher(cfg: AppSettings['external']): void {
     })
     externalWatcher = watcher
     watcher.start()
-    console.log(`[pet] external watcher started (claude=${cfg.claudeCode} codex=${cfg.codex})`)
+    console.log(`[pet] external watcher started (claude=${wantClaude} codex=${wantCodex})`)
   } else if (!want && externalWatcher) {
     externalWatcher.stop()
     externalWatcher = null

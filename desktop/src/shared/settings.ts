@@ -44,16 +44,6 @@ export type PetMoodKey =
   | 'offline'
   | 'sleeping'
 
-export interface ExternalToolSettings {
-  /** 监控 Claude Code 本地日志 */
-  claudeCode: boolean
-  /** 监控 OpenAI Codex 本地日志 */
-  codex: boolean
-  /** 自定义日志根目录（留空用默认 ~/.claude/projects 与 ~/.codex/sessions） */
-  claudeRoot: string
-  codexRoot: string
-}
-
 /** 每个 agent 的独立开关 */
 export interface AgentWatchSettings {
   /** agent id → 是否监控 */
@@ -81,7 +71,6 @@ export interface AppSettings {
   reminders: ReminderSettings
   push: PushChannelSettings
   appearance: AppearanceSettings
-  external: ExternalToolSettings
   agents: AgentWatchSettings
   /** DSH 地址 */
   dshUrl: string
@@ -108,12 +97,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     language: 'zh',
     petIcons: {},
     idleText: ''
-  },
-  external: {
-    claudeCode: false,
-    codex: false,
-    claudeRoot: '',
-    codexRoot: ''
   },
   agents: {
     watch: { dsh: true, 'claude-code': false, codex: false },

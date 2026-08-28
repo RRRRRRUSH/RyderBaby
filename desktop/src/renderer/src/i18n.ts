@@ -74,6 +74,7 @@ const dict = {
     version: '版本',
     // 保存
     saving: '保存中…',
+    saved: '✓ 已保存',
     loading: '加载中…',
     // 桌宠 HUD
     connected: '已连接',
@@ -151,6 +152,7 @@ const dict = {
     aboutText: 'RyderBaby — a desktop pet for programmers. Monitors token usage and task state of AI coding, turning ops info into a companion lounging at the corner of your screen.',
     version: 'Version',
     saving: 'Saving…',
+    saved: '✓ Saved',
     loading: 'Loading…',
     connected: 'Connected',
     reconnecting: 'Reconnecting…',
